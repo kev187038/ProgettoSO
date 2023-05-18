@@ -7,9 +7,6 @@
 //Page size di 16byte ognuna
 #define PAGE_SIZE (1<<4)
 
-//Num pages
-#define NUM_PAGES (VIRTUAL_MEMORY / PAGE_SIZE)
-
 //Memoria fisica 1MB
 #define PHYSICAL_MEMORY (1<<20)
 
@@ -25,6 +22,12 @@
 //NUMERO BIT PER ADDRESS FISICO
 #define PHYSICAL_ADDR_NUMBITS (1<<4)
 
+//NUMERO BYTE PER FRAME FISICO
+#define FRAME_SIZE 16
+
+//Num pages
+#define NUM_PAGES (PHYSICAL_MEMORY / PAGE_SIZE)
+
 //OFFSET
 #define OFFSET 4
 
@@ -37,7 +40,7 @@ typedef enum {
   Unswappable=0x2,
   Read=0x3,
   Write=0x4
-} SegmentFlags;
+} PageFlags;
 
 //Indirizzo logico, idealmente a 24bit: 20bit per id, 4bit per offset
 typedef struct LogicalAddress{
@@ -55,18 +58,24 @@ typedef struct PhysicalAddress{
 typedef struct PageTableEntry{
   uint32_t page_id: PAGE_NUMBITS;
   uint16_t phy_page_id: PHYSICAL_ADDR_NUMBITS;
-  uint8_t SegmentFlags: PAGE_FLAGS_NUMBITS;
+  PageFlags flags: PAGE_FLAGS_NUMBITS;
 }PageTableEntry;
+
+//Tabella delle pagine, 40bit(idealmente) per entry 
+typedef struct PageTable{
+  PageTableEntry *pages; 
+  uint32_t pages_left;
+}PageTable;
 
 //LA MMU conterrà la tabella delle pagine e un contatore per sapere se può soffisfare o meno una richiesta di pagine
 typedef struct MMU {
-  PageTableEntry *pages; //tabella delle pagine
-  uint32_t pages_left; 
+  PageTable * tables;  //nuova tabella allocata per ogni processo
 } MMU;
 
 //Frames di memoria fisica da 16byte ognuno
 typedef struct Frame{
   uint16_t phy_frame_id: PHYSICAL_ADDR_NUMBITS; 
+  char mem[FRAME_SIZE];
 }Frame;
 
 //Memoria fisica: buffer da 1MB su cui mappiamo la memoria
@@ -82,4 +91,4 @@ typedef struct SwapFile{
 //Funzioni da definire
 void MMU_writeByte(MMU* mmu, int pos, char c);
 char* MMU_readByte(MMU* mmu, int pos );
-
+void MMU_exception(MMU* mmu, int pos); //handling di page fault con algoritmo "second chance"
