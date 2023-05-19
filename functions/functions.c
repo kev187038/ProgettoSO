@@ -66,7 +66,7 @@ void MMU_exception(MMU* mmu, int pos){
         else if((listHead->element->flags & Valid) && (listHead->element->flags & Read) && (listHead->element->flags & Write) && !(listHead->element->flags & Unswappable)){
             //Se sia il bit di read che di write sono a 1, la pagina è usata molto: si setta uno dei bit a 0 e ha un'altra second chance
             listHead->element->flags &= ~Write; //setto read a 0
-            printf("Both read and write bits set to 1: change write bit of page %d to %d\n\n",listHead->element->page_id, listHead->element->flags & Write);
+            printf("Both read and write bits were 1: change write bit of page %d to %d\n\n",listHead->element->page_id, listHead->element->flags & Write);
             //Sposto l'elemento in coda
             inTail(mmu, listHead);
         }
