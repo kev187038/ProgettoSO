@@ -7,33 +7,42 @@
 int main(){
     MMU * mmu = (MMU*)malloc(sizeof(MMU));
     mmu->tables = (PageTable*)malloc(sizeof(PageTable)*MAX_NUM_PROCESSES); //spazio per tabelle
-    
-
+    mmu->pages_list = NULL;
     //RAM su cui si poggia la tabella delle pagine e il resto della memoria richiesta dai processi
     RAM * memory = (RAM*)malloc(sizeof(RAM));
 
-    //Creiamo i frame di memoria con i loro id
-    for(int i = 0; i<PHYSICAL_MEMORY/PHYSICAL_ADDR_NUMBITS; i++){
-        memory->frames[i].phy_frame_id = i;
+    //Creiamo i frame di memoria con i loro id, ogni frame ha 16byte e la memoria totale è 1MB
+    for(int i = 0; i<PHYSICAL_MEMORY/FRAME_SIZE; i++){
         memset(memory->frames[i].mem, 0, FRAME_SIZE);
     }
+    mmu->memory = memory;
+    mmu->swap_file = NULL;
 
-
-    if(!allocNewTable(mmu, memory)){
+    if(allocNewTable(mmu)){
         perror("Error allocating table!");
         free(memory);
         free(mmu->tables);
         free(mmu);
-        return 0;
+        return 1;
     }
 
     //Creiamo Swap File su DISCO
+    if(createSwapFile(mmu)){
+        perror("Error allocating swap disk!");
+        free(memory);
+        free(mmu->tables);
+        free(mmu);
+        return 1;
+    }
+
+    //Scriviamo qualcosa in posizione 7000
 
 
-
-    //Libero memoria
+    //Libero memoria della tabella '0'
+    deallocTable(mmu, 0);
     free(memory);
     free(mmu->tables);
+    fclose(mmu->swap_file);
     free(mmu);
 
     printf("TEST ENDED");
