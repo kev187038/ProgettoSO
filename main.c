@@ -4,6 +4,7 @@
 #include "h_files/mmu.h"
 #include "h_files/utils.h"
 
+//MAIN DI TESTING
 int main(){
     MMU * mmu = (MMU*)malloc(sizeof(MMU));
     mmu->tables = (PageTable*)malloc(sizeof(PageTable)*MAX_NUM_PROCESSES); //spazio per tabelle
@@ -26,6 +27,8 @@ int main(){
         return 1;
     }
 
+    
+
     //Creiamo Swap File su DISCO
     if(createSwapFile(mmu)){
         perror("Error allocating swap disk!");
@@ -35,7 +38,7 @@ int main(){
         return 1;
     }
 
-    //Scriviamo qualcosa in posizione 7000
+    //Scriviamo qualcosa in posizione 7000, mi aspetto che la scrittura vada senza page fault, visto che fino a 1MB di spazio logico è tutto allocato
 
 
     //Libero memoria della tabella '0'

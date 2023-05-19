@@ -11,3 +11,5 @@ int createSwapFile(MMU * mmu);
 void insertPage(PageTableEntry*entry, MMU* mmu);
 void removeLinkedList(MMU * mmu);
 void printLinkedList(MMU * mmu);
+void printLinkedListReverse(MMU * mmu);
+void inTail(MMU * mmu, PageElement * to_move);

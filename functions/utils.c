@@ -4,6 +4,7 @@
 #include "../h_files/mmu.h"
 #include "../h_files/utils.h"
 
+//FUNZIONI DI GESTIONE LISTA COLLEGATA
 void insertPage(PageTableEntry* entry, MMU*mmu){
     PageElement * new = (PageElement*)malloc(sizeof(PageElement));
     new->element = entry;
@@ -20,6 +21,7 @@ void insertPage(PageTableEntry* entry, MMU*mmu){
     }
     el->next = new;
     new->next = mmu->pages_list;
+    new->previous = el;
     mmu->pages_list->previous = new;
     return;
 }
@@ -45,6 +47,35 @@ void printLinkedList(MMU * mmu){
     printf("\nEND OF LINKED LIST\n");
 }
 
+void printLinkedListReverse(MMU * mmu){
+    PageElement * el = mmu->pages_list->previous;
+    printf("START PRINTING LINKED LIST\n");
+    printf("%d->", el->element->page_id);
+    while(el != mmu->pages_list){
+        el = el->previous;
+        printf("%d->", el->element->page_id);
+    }
+    printf("\nEND OF LINKED LIST\n");
+}
+//Sposta in coda alla lista circolare qualsiasi elemento to_move
+void inTail(MMU * mmu, PageElement * to_move){
+    PageElement * listHead = mmu->pages_list;
+    PageElement * el = to_move;
+
+    PageElement * prev_of_head = listHead->previous;
+    PageElement * nxt = el->next;
+    PageElement * prev = el->previous;
+
+    prev->next = nxt;
+    nxt->previous = prev;
+
+    listHead->previous = el;
+    prev_of_head->next = el;
+    el->next = listHead;
+    el->previous = prev_of_head;
+}
+
+//FUNZIONI GESTIONE MMU
 int allocNewTable(MMU * mmu){
     RAM * memory = mmu->memory;
     if(!mmu || !memory){
@@ -75,7 +106,7 @@ int allocNewTable(MMU * mmu){
 
             }
 
-            printLinkedList(mmu);
+            //printLinkedList(mmu);
 
             //Facciamo gestire i primi frame dedicati alla tabella delle pagine alla tabella stessa:
             for(int j = 0; j<4; j++){
@@ -100,7 +131,6 @@ int allocNewTable(MMU * mmu){
                     memory->frames[k].mem[y] = 1;
                 }
             }
-            
             printf("Done!\n");
             break;
         }
