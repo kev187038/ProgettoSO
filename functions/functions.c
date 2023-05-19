@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../h_files/mmu.h"
 #include "../h_files/utils.h"
+//Handles page fault
 void MMU_exception(MMU* mmu, int pos){
     printf("Page fault in posizione %d\n\n", pos);
     //Calcoliamo Id  ~
@@ -75,9 +76,10 @@ void MMU_exception(MMU* mmu, int pos){
 
 }
 
+//Writes single byte c, accessing to memory in position pos
 void MMU_writeByte(MMU* mmu, int pos, char c){
     if(pos >= (1<<24) || pos<0){
-        perror("Errore, posizione illegale! L'istruzione sarà ignorata.\n\n");
+        printf("Errore, posizione illegale! L'istruzione sarà ignorata.\n\n");
         return;
     }
 
@@ -101,10 +103,12 @@ void MMU_writeByte(MMU* mmu, int pos, char c){
     }
 
 }
+
+//Reads single byte, accessing to memory in position pos
 char* MMU_readByte(MMU* mmu, int pos ){
 
     if(pos >= (1<<24) || pos<0){
-        perror("Errore, posizione illegale! L'istruzione sarà ignorata.\n\n");
+        printf("Errore, posizione illegale! L'istruzione sarà ignorata.\n\n");
         return NULL;
     }
     //Calcoliamo Id e offset del processo a cui accedere ~

@@ -10,7 +10,7 @@
 //Memoria fisica 1MB
 #define PHYSICAL_MEMORY (1<<20)
 
-//SWAPPING DISK SIZE
+//SWAPPING DISK SIZE DI 16MB
 # define SWAPPING_DISK_SIZE (1<<24)
 
 //NUMERO BIT PER LE FLAG
@@ -22,13 +22,13 @@
 //NUMERO BIT PER ADDRESS FISICO
 #define PHYSICAL_ADDR_NUMBITS 8
 
-//NUMERO BYTE PER FRAME FISICO
+//NUMERO BYTE PER FRAME FISICO: MISURA DELLA PAGINA
 #define FRAME_SIZE PAGE_SIZE
 
-//Num pages vere 256
+//Num pagine mappabili alla volta: 256
 #define NUM_PAGES (PHYSICAL_MEMORY / PAGE_SIZE)
 
-//Num pagine della memoria virtuale
+//Num pagine della memoria virtuale totali: 4096
 #define VM_NUM_PAGES (VIRTUAL_MEMORY/PAGE_SIZE)
 
 //OFFSET
@@ -54,7 +54,7 @@ typedef struct PageTableEntry{
 
 //Tabella delle pagine, 40bit(idealmente) per entry 
 typedef struct PageTable{
-  PageTableEntry *pages; 
+  PageTableEntry * pages; 
   uint32_t pages_left;
 }PageTable;
 
@@ -65,7 +65,7 @@ typedef struct Frame{
 
 //Memoria fisica: buffer da 1MB su cui mappiamo la memoria
 typedef struct RAM{
-  Frame frames[PHYSICAL_MEMORY/PAGE_SIZE]; //1MB 
+  Frame frames[PHYSICAL_MEMORY/FRAME_SIZE]; //1MB 
 }RAM;
 
 //Lista collegata di pagine implementata esternamente
@@ -85,6 +85,6 @@ typedef struct MMU {
 
 
 //Funzioni da definire nella consegna
-void MMU_writeByte(MMU* mmu, int pos, char c);
-char* MMU_readByte(MMU* mmu, int pos );
-void MMU_exception(MMU* mmu, int pos); //handling di page fault con algoritmo "second chance"
+void MMU_writeByte(MMU * mmu, int pos, char c);
+char * MMU_readByte(MMU * mmu, int pos );
+void MMU_exception(MMU * mmu, int pos); //handling di page fault con algoritmo "second chance"

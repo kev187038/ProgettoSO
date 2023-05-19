@@ -5,6 +5,8 @@
 #include "../h_files/utils.h"
 
 //FUNZIONI DI GESTIONE LISTA COLLEGATA
+
+//Inserts new entry at the end of the LinkedList
 void insertPage(PageTableEntry* entry, MMU*mmu){
     PageElement * new = (PageElement*)malloc(sizeof(PageElement));
     new->element = entry;
@@ -36,6 +38,7 @@ void removeLinkedList(MMU * mmu){
     }
 }
 
+//Prints in order all list nodes 
 void printLinkedList(MMU * mmu){
     PageElement * el = mmu->pages_list;
     printf("\nSTART PRINTING LINKED LIST\n");
@@ -47,6 +50,7 @@ void printLinkedList(MMU * mmu){
     printf("\nEND OF LINKED LIST\n");
 }
 
+//Prints in order all list nodes with the Valid bit set to 1
 void printLinkedListValid(MMU * mmu){
     PageElement * el = mmu->pages_list;
     printf("\nSTART PRINTING VALID NODES OF LINKED LIST\n");
@@ -61,6 +65,7 @@ void printLinkedListValid(MMU * mmu){
     }
     printf("\nEND OF LINKED LIST\n");
 }
+//Prints in order all list nodes with the Read bit set to 1
 void printLinkedListRead(MMU * mmu){
     PageElement * el = mmu->pages_list;
     printf("\nSTART PRINTING READ NODES OF LINKED LIST\n");
@@ -76,6 +81,7 @@ void printLinkedListRead(MMU * mmu){
     printf("\nEND OF LINKED LIST\n");
 }
 
+//Prints in order all list nodes with the Write bit set to 1
 void printLinkedListWrite(MMU * mmu){
     PageElement * el = mmu->pages_list;
     printf("\nSTART PRINTING DIRTY NODES OF LIST\n");
@@ -91,6 +97,7 @@ void printLinkedListWrite(MMU * mmu){
     printf("\nEND OF LINKED LIST\n");
 }
 
+//Prints the list reversed
 void printLinkedListReverse(MMU * mmu){
     PageElement * el = mmu->pages_list->previous;
     printf("\nSTART PRINTING LINKED LIST IN REVERSE ORDER\n");
@@ -101,7 +108,8 @@ void printLinkedListReverse(MMU * mmu){
     }
     printf("\nEND OF LINKED LIST\n");
 }
-//Sposta in coda alla lista circolare qualsiasi pagina "to_move"
+
+//Moves to the tails of the list any element "to_move"
 void inTail(MMU * mmu, PageElement * to_move){
     PageElement * listHead = mmu->pages_list;
     PageElement * el = to_move;
@@ -127,6 +135,8 @@ void inTail(MMU * mmu, PageElement * to_move){
 }
 
 //FUNZIONI GESTIONE MMU
+
+//Allocates page table with all possible pages already mapped onto frames
 int allocNewTable(MMU * mmu){
     RAM * memory = mmu->memory;
     if(!mmu || !memory){
@@ -189,7 +199,7 @@ int allocNewTable(MMU * mmu){
     return 0;
 }
 
-//Dealloca la table singola
+//Deallocates the table
 void deallocTable(MMU * mmu, int tableIndex){
     RAM * memory = mmu->memory;
     printf("Deallocating table\n");
@@ -206,16 +216,16 @@ void deallocTable(MMU * mmu, int tableIndex){
    printf("Table deallocated successfully\n");
 }
 
-//crea file di swap di 16MB
+//Creates or opens swap file of 16MB
 int createSwapFile(MMU * mmu){
     if(!mmu){
         perror("mmu not initialized!\n");
         return 1;
     }
     mmu->swap_file = fopen("swap_file.bin", "w+b");
-    char * val = (char*)malloc(sizeof(char)*FILE_SIZE);
-    memset(val, 0, FILE_SIZE);
-    fwrite(val, sizeof(char), FILE_SIZE, mmu->swap_file);
+    char * val = (char*)malloc(sizeof(char)*SWAPPING_DISK_SIZE);
+    memset(val, 0, SWAPPING_DISK_SIZE);
+    fwrite(val, sizeof(char), SWAPPING_DISK_SIZE, mmu->swap_file);
     free(val);
     return 0;
 }
