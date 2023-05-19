@@ -12,4 +12,7 @@ void insertPage(PageTableEntry*entry, MMU* mmu);
 void removeLinkedList(MMU * mmu);
 void printLinkedList(MMU * mmu);
 void printLinkedListReverse(MMU * mmu);
+void printLinkedListValid(MMU*mmu);
+void printLinkedListRead(MMU * mmu);
+void printLinkedListWrite(MMU * mmu);
 void inTail(MMU * mmu, PageElement * to_move);

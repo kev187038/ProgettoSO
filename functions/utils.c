@@ -38,7 +38,7 @@ void removeLinkedList(MMU * mmu){
 
 void printLinkedList(MMU * mmu){
     PageElement * el = mmu->pages_list;
-    printf("START PRINTING LINKED LIST\n");
+    printf("\nSTART PRINTING LINKED LIST\n");
     printf("%d->", el->element->page_id);
     while(el->next != mmu->pages_list){
         el = el->next;
@@ -47,9 +47,47 @@ void printLinkedList(MMU * mmu){
     printf("\nEND OF LINKED LIST\n");
 }
 
+void printLinkedListValid(MMU * mmu){
+    PageElement * el = mmu->pages_list;
+    printf("\nSTART PRINTING VALID NODES OF LINKED LIST\n");
+    printf("%d->", el->element->page_id);
+    while(el->next != mmu->pages_list){
+        el = el->next;
+        if(el->element->flags & Valid){
+            printf("%d->", el->element->page_id);
+        }
+    }
+    printf("\nEND OF LINKED LIST\n");
+}
+void printLinkedListRead(MMU * mmu){
+    PageElement * el = mmu->pages_list;
+    printf("\nSTART PRINTING READ NODES OF LINKED LIST\n");
+    printf("%d->", el->element->page_id);
+    while(el->next != mmu->pages_list){
+        el = el->next;
+        if(el->element->flags & Read){
+            printf("%d->", el->element->page_id);
+        }
+    }
+    printf("\nEND OF LINKED LIST\n");
+}
+
+void printLinkedListWrite(MMU * mmu){
+    PageElement * el = mmu->pages_list;
+    printf("\nSTART PRINTING DIRTY NODES OF LIST\n");
+    printf("%d->", el->element->page_id);
+    while(el->next != mmu->pages_list){
+        el = el->next;
+        if(el->element->flags & Write){
+            printf("%d->", el->element->page_id);
+        }
+    }
+    printf("\nEND OF LINKED LIST\n");
+}
+
 void printLinkedListReverse(MMU * mmu){
     PageElement * el = mmu->pages_list->previous;
-    printf("START PRINTING LINKED LIST\n");
+    printf("\nSTART PRINTING LINKED LIST IN REVERSE ORDER\n");
     printf("%d->", el->element->page_id);
     while(el != mmu->pages_list){
         el = el->previous;
@@ -57,7 +95,7 @@ void printLinkedListReverse(MMU * mmu){
     }
     printf("\nEND OF LINKED LIST\n");
 }
-//Sposta in coda alla lista circolare qualsiasi elemento to_move
+//Sposta in coda alla lista circolare qualsiasi pagina "to_move"
 void inTail(MMU * mmu, PageElement * to_move){
     PageElement * listHead = mmu->pages_list;
     PageElement * el = to_move;
@@ -88,7 +126,7 @@ int allocNewTable(MMU * mmu){
         //Al primo spazio libero alloco la tabella
         if ( mmu->tables[i].pages == NULL){
             //Alloco le pagine
-            printf("Allocating space for %d pages, one table\n", VM_NUM_PAGES);
+            printf("Allocating space for %d pages, one table\n\n", VM_NUM_PAGES);
             mmu->tables[i].pages = malloc(sizeof(PageTableEntry)*VM_NUM_PAGES);
             mmu->tables[i].pages_left = VM_NUM_PAGES - 4;   
             for(int j = 4; j<VM_NUM_PAGES; j++){
@@ -131,7 +169,7 @@ int allocNewTable(MMU * mmu){
                     memory->frames[k].mem[y] = 1;
                 }
             }
-            printf("Done!\n");
+            printf("Done!\n\n");
             break;
         }
     }
@@ -152,6 +190,7 @@ void deallocTable(MMU * mmu, int tableIndex){
 
     //Rimuoviamo la lista collegata associata
    removeLinkedList(mmu);
+   printf("Table deallocated successfully\n");
 }
 
 //crea file di swap di 16MB
@@ -161,5 +200,9 @@ int createSwapFile(MMU * mmu){
         return 1;
     }
     mmu->swap_file = fopen("swap_file.bin", "w+b");
+    char * val = (char*)malloc(sizeof(char)*FILE_SIZE);
+    memset(val, 0, FILE_SIZE);
+    fwrite(val, sizeof(char), FILE_SIZE, mmu->swap_file);
+    free(val);
     return 0;
 }

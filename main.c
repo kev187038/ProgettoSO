@@ -38,7 +38,21 @@ int main(){
         return 1;
     }
 
-    //Scriviamo qualcosa in posizione 7000, mi aspetto che la scrittura vada senza page fault, visto che fino a 1MB di spazio logico è tutto allocato
+    printf("The linked list of all allocated Pages is:\n");
+    //printLinkedList(mmu);
+
+    //Scriviamo qualcosa in posizione 7000+4*PAGE_SIZE, mi aspetto che la scrittura vada senza page fault, visto che fino a 1MB di spazio logico è tutto allocato
+    MMU_writeByte(mmu, 7000+4*PAGE_SIZE, 'a');
+    char * c = MMU_readByte(mmu, 3500+4*PAGE_SIZE);
+    //printLinkedListValid(mmu);
+    printLinkedListRead(mmu);
+    printLinkedListWrite(mmu);
+
+    //Scriviamo ora in un'area non mappata
+    MMU_writeByte(mmu, 2000000, 'H');
+
+    //Leggiamo da un'area non esistente
+    c = MMU_readByte(mmu, (1<<25));
 
 
     //Libero memoria della tabella '0'
@@ -48,6 +62,6 @@ int main(){
     fclose(mmu->swap_file);
     free(mmu);
 
-    printf("TEST ENDED");
+    printf("TEST ENDED!!\n");
     return 0;
 }

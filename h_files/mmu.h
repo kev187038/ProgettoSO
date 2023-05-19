@@ -41,21 +41,9 @@
 typedef enum {
   Valid=0x1,
   Unswappable=0x2,
-  Read=0x3,
-  Write=0x4
+  Read=0x4,
+  Write=0x8
 } PageFlags;
-
-//Indirizzo logico, idealmente a 24bit: 12bit per id, 12bit per offset
-typedef struct LogicalAddress{
-  uint32_t page_id: PAGE_NUMBITS;
-  uint16_t offset: OFFSET;
-} LogicalAddress;
-
-//Indirizzo fisico a 20bit: 16 di id e 4 di offset
-typedef struct PhysicalAddress{
-  uint16_t phy_page_id: PHYSICAL_ADDR_NUMBITS;
-  uint16_t offset:   OFFSET;
-} PhysicalAddress;
 
 //Entry della tabella delle pagine: idealmente 12bit per indirizzo logico, 8 per fisico e 4 bit per flag -> 24bit per entry
 typedef struct PageTableEntry{
@@ -96,7 +84,7 @@ typedef struct MMU {
 } MMU;
 
 
-//Funzioni da definire
+//Funzioni da definire nella consegna
 void MMU_writeByte(MMU* mmu, int pos, char c);
 char* MMU_readByte(MMU* mmu, int pos );
 void MMU_exception(MMU* mmu, int pos); //handling di page fault con algoritmo "second chance"
