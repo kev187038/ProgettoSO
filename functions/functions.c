@@ -76,38 +76,35 @@ void MMU_exception(MMU* mmu, int pos){
 }
 
 void MMU_writeByte(MMU* mmu, int pos, char c){
-    if(pos >= (1<<24)){
-        perror("Errore, spazio logico non abbastanza grande! L'istruzione sarà ignorata.\n\n");
+    if(pos >= (1<<24) || pos<0){
+        perror("Errore, posizione illegale! L'istruzione sarà ignorata.\n\n");
         return;
     }
+
     //Calcoliamo Id e offset del processo a cui accedere ~
     int page_id = pos/PAGE_SIZE;
     int offset  = pos % PAGE_SIZE;
 
     if(mmu->tables[0].pages[page_id].flags & Valid){
-        printf("Scrivo '%c' in memoria in posizione %d in pagina %d, con offset %d\n\n", c, pos, page_id, offset);
-        mmu->tables[0].pages[page_id].flags | Write; //Impostiamo bit di scrittura e lettura a 1
-        mmu->tables[0].pages[page_id].flags | Read; 
+        printf("Scrivo '%c' in memoria in posizione %d in pagina %d, con offset %d\n", c, pos, page_id, offset);
+        mmu->tables[0].pages[page_id].flags |= Write; //Impostiamo bit di scrittura e lettura a 1
 
         //Scriviamo su memoria fisica: prendo l'id del frame dalla entry della tabella delle pagine e così trovo il frame fisico
         int frame_id = mmu->tables[0].pages[page_id].phy_page_id;
         mmu->memory->frames[frame_id].mem[offset] = c; 
+        printf("Fatto\n\n");
     }else{
         //Eccezione per accesso a memoria invalido
         MMU_exception(mmu,pos);
         //Riproviamo a scrivere dopo aver allocato/sostituito la pagina
-        printf("Scrivo '%c' in memoria in posizione %d in pagina %d, con offset %d\n\n", c, pos, page_id, offset);
-        mmu->tables[0].pages[page_id].flags |= Write; //Impostiamo bit di scrittura a 1
-        mmu->tables[0].pages[page_id].flags |= Read; 
-        int frame_id = mmu->tables[0].pages[page_id].phy_page_id;
-        mmu->memory->frames[frame_id].mem[offset] = c; 
+        MMU_writeByte(mmu,pos,c);
     }
 
 }
 char* MMU_readByte(MMU* mmu, int pos ){
 
-    if(pos >= (1<<24)){
-        perror("Errore, spazio logico non abbastanza grande! L'istruzione sarà ignorata.\n\n");
+    if(pos >= (1<<24) || pos<0){
+        perror("Errore, posizione illegale! L'istruzione sarà ignorata.\n\n");
         return NULL;
     }
     //Calcoliamo Id e offset del processo a cui accedere ~
@@ -115,9 +112,10 @@ char* MMU_readByte(MMU* mmu, int pos ){
     int offset  = pos % PAGE_SIZE;
 
     if(mmu->tables[0].pages[page_id].flags & Valid){
-        printf("Leggo da memoria in posizione %d in pagina %d, con offset %d\n\n", pos, page_id, offset);
+        printf("Leggo da memoria in posizione %d in pagina %d, con offset %d\n", pos, page_id, offset);
         mmu->tables[0].pages[page_id].flags |= Read; 
         int frame_id = mmu->tables[0].pages[page_id].phy_page_id;
+        printf("Fatto\n\n");
         return &(mmu->memory->frames[frame_id].mem[offset]);
     }else{
         //Se sto leggendo da memoria invalida cerco sul file il frame

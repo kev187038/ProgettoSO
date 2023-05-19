@@ -27,8 +27,6 @@ int main(){
         return 1;
     }
 
-    
-
     //Creiamo Swap File su DISCO
     if(createSwapFile(mmu)){
         perror("Error allocating swap disk!");
@@ -38,11 +36,11 @@ int main(){
         return 1;
     }
 
-    printf("The linked list of all allocated Pages is:\n");
+    //printf("The linked list of all allocated Pages is:\n");
     //printLinkedList(mmu);
 
     //Scriviamo qualcosa in posizione 7000+4*PAGE_SIZE, mi aspetto che la scrittura vada senza page fault, visto che fino a 1MB di spazio logico è tutto allocato
-    MMU_writeByte(mmu, 7000+4*PAGE_SIZE, 'a');
+    MMU_writeByte(mmu, 7000+4*PAGE_SIZE, 'A');
     char * c = MMU_readByte(mmu, 3500+4*PAGE_SIZE);
     //printLinkedListValid(mmu);
     printLinkedListRead(mmu);
@@ -53,6 +51,9 @@ int main(){
 
     //Leggiamo da un'area non esistente
     c = MMU_readByte(mmu, (1<<25));
+
+    c = MMU_readByte(mmu, 7000+4*PAGE_SIZE);
+    printf("Il byte letto dalla posizione in cui abbiamo scritto prima è proprio: %c\n\n", *c);
 
 
     //Libero memoria della tabella '0'

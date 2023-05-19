@@ -50,7 +50,9 @@ void printLinkedList(MMU * mmu){
 void printLinkedListValid(MMU * mmu){
     PageElement * el = mmu->pages_list;
     printf("\nSTART PRINTING VALID NODES OF LINKED LIST\n");
-    printf("%d->", el->element->page_id);
+    if(el->element->flags & Valid){
+        printf("%d->", el->element->page_id);
+    }
     while(el->next != mmu->pages_list){
         el = el->next;
         if(el->element->flags & Valid){
@@ -62,7 +64,9 @@ void printLinkedListValid(MMU * mmu){
 void printLinkedListRead(MMU * mmu){
     PageElement * el = mmu->pages_list;
     printf("\nSTART PRINTING READ NODES OF LINKED LIST\n");
-    printf("%d->", el->element->page_id);
+    if(el->element->flags & Read){
+        printf("%d->", el->element->page_id);
+    }
     while(el->next != mmu->pages_list){
         el = el->next;
         if(el->element->flags & Read){
@@ -75,7 +79,9 @@ void printLinkedListRead(MMU * mmu){
 void printLinkedListWrite(MMU * mmu){
     PageElement * el = mmu->pages_list;
     printf("\nSTART PRINTING DIRTY NODES OF LIST\n");
-    printf("%d->", el->element->page_id);
+    if(el->element->flags & Write){
+        printf("%d->", el->element->page_id);
+    }
     while(el->next != mmu->pages_list){
         el = el->next;
         if(el->element->flags & Write){
@@ -103,6 +109,13 @@ void inTail(MMU * mmu, PageElement * to_move){
     PageElement * prev_of_head = listHead->previous;
     PageElement * nxt = el->next;
     PageElement * prev = el->previous;
+
+    //Caso speciale: bisogna spostare la testa in coda
+    if(listHead == el){
+        PageElement * nxt_of_head = listHead->next;
+        mmu->pages_list = nxt_of_head;
+        return;
+    }
 
     prev->next = nxt;
     nxt->previous = prev;
