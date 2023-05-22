@@ -65,14 +65,14 @@ int main(){
     printf("Altri test:)\n\n");
     //Per i prossimi test, poniamoci nella condizione in cui ogni pagina ha almeno un bit a 1: così potremo
     //testare il programma quando deve mettere una pagina (la 7, perché ora si trova all'inizio della lista) su disco e poi riperscarla
-    //per farlo, scriviamo qualcosa su tutte le altre pagine, così che ricevano una seconda chance e A venga sfrattata
+    //per farlo, scriviamo qualcosa su tutte le altre pagine, così che ricevano una seconda chance e 7 venga sfrattata
     //da notare che la 6 è stata sostituita con un'altra pagina, quindi non deve essere considerata, altrimenti generiamo page fault a cascata
     for(int i = 7; i<NUM_PAGES; i++){
         MMU_writeByte(mmu,i*PAGE_SIZE, 'C');
     }
     //Scriviamo in maniera tale da generare page fault
     MMU_writeByte(mmu, 500*PAGE_SIZE, 'D');
-    //Ora che la pagina 7 è stata rimpiazzata, proviamo a leggere di nuovo il carattere C in 7: generiamo un altri page fault
+    //Ora che la pagina 7 è stata rimpiazzata, proviamo a leggere di nuovo il carattere C in 7: generiamo un altro page fault
     c = MMU_readByte(mmu, 7*PAGE_SIZE);
     printf("Carattere letto da pagina ripescata da swap file è proprio %c\n\n", *c);
 

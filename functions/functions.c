@@ -9,8 +9,28 @@ void MMU_exception(MMU* mmu, int pos){
     //Calcoliamo Id  ~
     int page_id = pos/PAGE_SIZE;
     int page_evicted = -1;
+
+    //Se il numero di frame liberi rimasti è > 0, possiamo trovarlo e allocare la pagina lì
+    if(mmu->tables[0].pages_left > 0){
+        printf("Found free frame: alllocating page...\n");
+        int frame_id;
+        for(int i = 0; i<NUM_PAGES;i++){
+            if(mmu->track_alloc_frames[i] == 0){
+                frame_id = i;
+                break;
+            }
+        }
+        //Alloca la pagina nel primo frame disponibile
+        mmu->tables[0].pages_left--;
+        mmu->tables[0].pages[page_id].flags |= Valid | Write | Read;
+        mmu->tables[0].pages[page_id].phy_page_id = frame_id;
+        printf("Done.\n\n");
+        return;
+    }
+
     PageElement * listHead = mmu->pages_list;
 
+    //IMPLEMENTAZIONE SECOND  CHANCE ALGORITHM
    //1.Cerco la pagina logica non mappata in RAM su FILE
    //2.La cambio con la prima pagina sfrattabile su memoria fisica
 
@@ -21,7 +41,6 @@ void MMU_exception(MMU* mmu, int pos){
     size_t bytes_read = fread(buffer, sizeof(char),PAGE_SIZE, mmu->swap_file);
 
     //2
-    //IMPLEMENTAZIONE SECOND  CHANCE ALGORITHM
     //Si assume che tutta la memoria sia allocata all'inizio
     //Saltiamo le pagine unswappable iniziali della tabella
     while(listHead->element->flags & Unswappable){

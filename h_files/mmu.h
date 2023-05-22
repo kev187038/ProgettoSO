@@ -81,6 +81,7 @@ typedef struct MMU {
   RAM * memory;
   FILE * swap_file;
   PageElement * pages_list;
+  char track_alloc_frames[NUM_PAGES];
 } MMU;
 
 

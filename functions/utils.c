@@ -151,7 +151,11 @@ int allocNewTable(MMU * mmu){
             //Alloco le pagine
             printf("Allocating space for %d pages, one table\n\n", VM_NUM_PAGES);
             mmu->tables[i].pages = malloc(sizeof(PageTableEntry)*VM_NUM_PAGES);
-            mmu->tables[i].pages_left = VM_NUM_PAGES - 4;   
+             //Assume all memory allocated 
+            mmu->tables[i].pages_left = 0;  
+            for(int j = 0; j<NUM_PAGES;j++){
+                mmu->track_alloc_frames[j] = 1;//Occupiamo tutta la memoria(caso interessante per fare swap)
+            }
             for(int j = 4; j<VM_NUM_PAGES; j++){
                 mmu->tables[i].pages[j].flags = 0;
                 mmu->tables[i].pages[j].page_id = j;
