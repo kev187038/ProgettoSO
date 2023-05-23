@@ -8,11 +8,11 @@
 int main(){
     MMU * mmu = (MMU*)malloc(sizeof(MMU));
     mmu->tables = (PageTable*)malloc(sizeof(PageTable)*MAX_NUM_PROCESSES); //spazio per tabelle
-    mmu->pages_list = NULL;
     //RAM su cui si poggia la tabella delle pagine e il resto della memoria richiesta dai processi
     RAM * memory = (RAM*)malloc(sizeof(RAM));
+    mmu->listHead = 0;
 
-    //Creiamo i frame di memoria con i loro id, ogni frame ha 16byte e la memoria totale è 1MB
+    //Creiamo i frame di memoria con i loro id, ogni frame ha 16byte e la memoria totale e 1MB
     for(int i = 0; i<PHYSICAL_MEMORY/FRAME_SIZE; i++){
         memset(memory->frames[i].mem, 0, FRAME_SIZE);
     }
@@ -53,28 +53,29 @@ int main(){
     c = MMU_readByte(mmu, (1<<25));
 
     c = MMU_readByte(mmu, 7000+4*PAGE_SIZE);
-    printf("Il byte letto dalla posizione in cui abbiamo scritto prima è proprio: %c\n\n", *c);
+    printf("Il byte letto dalla posizione in cui abbiamo scritto prima e proprio: %c\n\n", *c);
 
-    //Leggiamo dall'area su cui c'è stato un page fault prima
+    //Leggiamo dall'area su cui c'e stato un page fault prima
     c = MMU_readByte(mmu,2000000);
-    printf("Il byte letto dall'area che aveva causato PF è proprio %c\n\n",*c);
+    printf("Il byte letto dall'area che aveva causato PF e proprio %c\n\n",*c);
 
     MMU_writeByte(mmu,3500+4*PAGE_SIZE,'B');
+    
 
     printLinkedListValid(mmu);
     printf("Altri test:)\n\n");
     //Per i prossimi test, poniamoci nella condizione in cui ogni pagina ha almeno un bit a 1: così potremo
     //testare il programma quando deve mettere una pagina (la 7, perché ora si trova all'inizio della lista) su disco e poi riperscarla
-    //per farlo, scriviamo qualcosa su tutte le altre pagine, così che ricevano una seconda chance e 7 venga sfrattata
-    //da notare che la 6 è stata sostituita con un'altra pagina, quindi non deve essere considerata, altrimenti generiamo page fault a cascata
+    //per farlo, scriviamo qualcosa su tutte le altre pagine, cosi che ricevano una seconda chance e 7 venga sfrattata
+    //da notare che la 6 e stata sostituita con un'altra pagina, quindi non deve essere considerata, altrimenti generiamo page fault a cascata
     for(int i = 7; i<NUM_PAGES; i++){
         MMU_writeByte(mmu,i*PAGE_SIZE, 'C');
     }
     //Scriviamo in maniera tale da generare page fault
     MMU_writeByte(mmu, 500*PAGE_SIZE, 'D');
-    //Ora che la pagina 7 è stata rimpiazzata, proviamo a leggere di nuovo il carattere C in 7: generiamo un altro page fault
+    //Ora che la pagina 4 e stata rimpiazzata, proviamo a leggere di nuovo il carattere C in 7: generiamo un altro page fault
     c = MMU_readByte(mmu, 7*PAGE_SIZE);
-    printf("Carattere letto da pagina ripescata da swap file è proprio %c\n\n", *c);
+    printf("Carattere letto da pagina ripescata da swap file e proprio %c\n\n", *c);
 
     //Libero memoria della tabella '0'
     deallocTable(mmu, 0);

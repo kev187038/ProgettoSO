@@ -6,132 +6,64 @@
 
 //FUNZIONI DI GESTIONE LISTA COLLEGATA
 
-//Inserts new entry at the end of the LinkedList
-void insertPage(PageTableEntry* entry, MMU*mmu){
-    PageElement * new = (PageElement*)malloc(sizeof(PageElement));
-    new->element = entry;
-    if(mmu->pages_list == NULL){
-        mmu->pages_list = new;
-        new->next = new;
-        new->previous = new;
-        return;
-    }
 
-    PageElement * el = mmu->pages_list;
-    while(el->next != mmu->pages_list){
-        el = el->next;
-    }
-    el->next = new;
-    new->next = mmu->pages_list;
-    new->previous = el;
-    mmu->pages_list->previous = new;
-    return;
-}
 
-void removeLinkedList(MMU * mmu){
-    PageElement * el = mmu->pages_list;
-    PageElement * nextnode;
-    while(el != mmu->pages_list){
-        nextnode = el->next;
-        free(el);
-        el = nextnode;
-    }
-}
-
-//Prints in order all list nodes 
-void printLinkedList(MMU * mmu){
-    PageElement * el = mmu->pages_list;
-    printf("\nSTART PRINTING LINKED LIST\n");
-    printf("%d->", el->element->page_id);
-    while(el->next != mmu->pages_list){
-        el = el->next;
-        printf("%d->", el->element->page_id);
-    }
-    printf("\nEND OF LINKED LIST\n");
-}
 
 //Prints in order all list nodes with the Valid bit set to 1
 void printLinkedListValid(MMU * mmu){
-    PageElement * el = mmu->pages_list;
+    int listHead = mmu->listHead;
     printf("\nSTART PRINTING VALID NODES OF LINKED LIST\n");
-    if(el->element->flags & Valid){
-        printf("%d->", el->element->page_id);
-    }
-    while(el->next != mmu->pages_list){
-        el = el->next;
-        if(el->element->flags & Valid){
-            printf("%d->", el->element->page_id);
+
+    while(listHead < 4096){
+
+        if(mmu->tables[0].pages[listHead].flags & Valid){
+            printf("%d->", mmu->tables[0].pages[listHead].page_id);
         }
+        listHead++;
     }
     printf("\nEND OF LINKED LIST\n");
 }
 //Prints in order all list nodes with the Read bit set to 1
 void printLinkedListRead(MMU * mmu){
-    PageElement * el = mmu->pages_list;
-    printf("\nSTART PRINTING READ NODES OF LINKED LIST\n");
-    if(el->element->flags & Read){
-        printf("%d->", el->element->page_id);
-    }
-    while(el->next != mmu->pages_list){
-        el = el->next;
-        if(el->element->flags & Read){
-            printf("%d->", el->element->page_id);
+    int listHead = mmu->listHead;
+    printf("\nSTART PRINTING VALID NODES OF LINKED LIST\n");
+
+    while(listHead < 4096){
+
+        if(mmu->tables[0].pages[listHead].flags & Read){
+            printf("%d->", mmu->tables[0].pages[listHead].page_id);
         }
+        listHead++;
     }
     printf("\nEND OF LINKED LIST\n");
 }
 
 //Prints in order all list nodes with the Write bit set to 1
 void printLinkedListWrite(MMU * mmu){
-    PageElement * el = mmu->pages_list;
-    printf("\nSTART PRINTING DIRTY NODES OF LIST\n");
-    if(el->element->flags & Write){
-        printf("%d->", el->element->page_id);
-    }
-    while(el->next != mmu->pages_list){
-        el = el->next;
-        if(el->element->flags & Write){
-            printf("%d->", el->element->page_id);
+    int listHead = mmu->listHead;
+    printf("\nSTART PRINTING VALID NODES OF LINKED LIST\n");
+
+    while(listHead < 4096){
+
+        if(mmu->tables[0].pages[listHead].flags & Write){
+            printf("%d->", mmu->tables[0].pages[listHead].page_id);
         }
+        listHead++;
     }
     printf("\nEND OF LINKED LIST\n");
 }
 
 //Prints the list reversed
 void printLinkedListReverse(MMU * mmu){
-    PageElement * el = mmu->pages_list->previous;
-    printf("\nSTART PRINTING LINKED LIST IN REVERSE ORDER\n");
-    printf("%d->", el->element->page_id);
-    while(el != mmu->pages_list){
-        el = el->previous;
-        printf("%d->", el->element->page_id);
+    int listHead = 4095;
+    while(listHead > 0){
+
+        if(mmu->tables[0].pages[listHead].flags & Valid){
+            printf("%d->", mmu->tables[0].pages[listHead].page_id);
+        }
+        listHead--;
     }
     printf("\nEND OF LINKED LIST\n");
-}
-
-//Moves to the tails of the list any element "to_move"
-void inTail(MMU * mmu, PageElement * to_move){
-    PageElement * listHead = mmu->pages_list;
-    PageElement * el = to_move;
-
-    PageElement * prev_of_head = listHead->previous;
-    PageElement * nxt = el->next;
-    PageElement * prev = el->previous;
-
-    //Caso speciale: bisogna spostare la testa in coda
-    if(listHead == el){
-        PageElement * nxt_of_head = listHead->next;
-        mmu->pages_list = nxt_of_head;
-        return;
-    }
-
-    prev->next = nxt;
-    nxt->previous = prev;
-
-    listHead->previous = el;
-    prev_of_head->next = el;
-    el->next = listHead;
-    el->previous = prev_of_head;
 }
 
 //FUNZIONI GESTIONE MMU
@@ -164,10 +96,7 @@ int allocNewTable(MMU * mmu){
                     mmu->tables[i].pages[j].phy_page_id = (uint8_t )j;
                     mmu->tables[i].pages[j].flags |= Valid;
                 }
-                //Mappiamo tutti gli indirizzi sui frame, assumendo che tutta la memoria virtuale sia già allocata
-
-                //creiamo la lista collegata associata
-                insertPage(&(mmu->tables[i].pages[j]), mmu);
+                //Mappiamo tutti gli indirizzi sui frame, assumendo che tutta la memoria virtuale sia gia allocata
 
             }
 
@@ -180,12 +109,11 @@ int allocNewTable(MMU * mmu){
                 mmu->tables[i].pages[j].flags = 0;
                 //Le pagine corrispondenti ai frame della page table non sono scambiabili!
                 mmu->tables[i].pages[j].flags |= Unswappable;
-                mmu->tables[i].pages[j].flags |= Valid;
             }
 
             //La tabella delle pagine viene posta all'inizio della Memoria. Assumo che ogni tabella abbia dimensione fissa.
             //Viene mappata con costo NUM_PAGES*ENTRY_SIZE + pages_left_counter_size
-            //ENTRY SIZE è idealmente 24bit e abbiamo 2^12 pagine allocabili(2^8 frame occupabili). 3byte per entry, ogni frane da 4kb ospita fino a 1365 entry.
+            //ENTRY SIZE e idealmente 24bit e abbiamo 2^12 pagine allocabili(2^8 frame occupabili). 3byte per entry, ogni frane da 4kb ospita fino a 1365 entry.
             //Allo stesso tempo il contatore singolarmente occupa 4byte di un frame e le entry totali sono 4096.
             //Mettiamo quindi la tabella in memoria fisica
             //Per semplicità: 4096/1365 = 4 frame arrotondando per eccesso su 256
@@ -215,8 +143,6 @@ void deallocTable(MMU * mmu, int tableIndex){
     }
     free(mmu->tables[tableIndex].pages);
 
-    //Rimuoviamo la lista collegata associata
-   removeLinkedList(mmu);
    printf("Table deallocated successfully\n");
 }
 

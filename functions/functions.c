@@ -28,7 +28,7 @@ void MMU_exception(MMU* mmu, int pos){
         return;
     }
 
-    PageElement * listHead = mmu->pages_list;
+    int listHead = mmu->listHead;
 
     //IMPLEMENTAZIONE SECOND  CHANCE ALGORITHM
    //1.Cerco la pagina logica non mappata in RAM su FILE
@@ -43,21 +43,21 @@ void MMU_exception(MMU* mmu, int pos){
     //2
     //Si assume che tutta la memoria sia allocata all'inizio
     //Saltiamo le pagine unswappable iniziali della tabella
-    while(listHead->element->flags & Unswappable){
-        listHead = listHead->next;
+    while(mmu->tables[0].pages[listHead].flags & Unswappable){
+        listHead++;
     }
     while(1){
-        //Se il bit di validità è a 0, la pagina non è allocata e si cerca di allocarla
+        //Se il bit di validità è a 0, la pagina non e allocata e si cerca di allocarla
         //IPOTESI MEMORIA GIÀ ALLOCATA E MAPPATA DALL'INIZIO-> NON C'È QUESTO CASO
-        //Se il bit di validità è a 1, si controlla il bit di write e di read: se sono entrambi 0, si sostituisce
-        if((listHead->element->flags & Valid) && !(listHead->element->flags & Read) && !(listHead->element->flags & Write) && !(listHead->element->flags & Unswappable)){
-            //Pagina né letta, né scritta di recente->sostituzione
-            page_evicted = listHead->element->page_id;
+        //Se il bit di validita e a 1, si controlla il bit di write e di read: se sono entrambi 0, si sostituisce
+        if((mmu->tables[0].pages[listHead].flags & Valid) && !(mmu->tables[0].pages[listHead].flags & Read) && !(mmu->tables[0].pages[listHead].flags & Write) && !(mmu->tables[0].pages[listHead].flags & Unswappable)){
+            //Pagina ne letta, ne scritta di recente->sostituzione
+            page_evicted = mmu->tables[0].pages[listHead].page_id;
             int offset = page_evicted*PAGE_SIZE;
             fseek(mmu->swap_file,offset, SEEK_SET);
-            uint8_t frame_evicted = listHead->element->phy_page_id;
+            uint8_t frame_evicted = mmu->tables[0].pages[listHead].phy_page_id;
             fwrite(&(mmu->memory->frames[frame_evicted].mem), PAGE_SIZE, 1, mmu->swap_file); //scriviamo il buffer sul file
-            listHead->element->flags = 0;//Pagina non più allocata
+            mmu->tables[0].pages[listHead].flags = 0;//Pagina non più allocata
 
             //Copiamo i dati letti da swap_file nel frame
             memcpy(mmu->memory->frames[frame_evicted].mem, buffer, FRAME_SIZE);
@@ -67,30 +67,34 @@ void MMU_exception(MMU* mmu, int pos){
             mmu->tables->pages[page_id].flags |= Valid | Write | Read; //setto questi bit a 1
             mmu->tables->pages[page_id].phy_page_id = frame_evicted;
             printf("New page in frame %d is id %d\n\n", frame_evicted, page_id);
+            mmu->listHead = listHead;
             break;
         }
-        //Se solo uno dei due bit è impostato a 1, si setta a 0 se si mette in code la page
-        else if((listHead->element->flags & Valid) && (listHead->element->flags & Read) && !(listHead->element->flags & Write) && !(listHead->element->flags & Unswappable)){
-            listHead->element->flags &= ~Read; //setto read a 0
-            printf("Set read bit of page %d to %d\n\n",listHead->element->page_id, listHead->element->flags & Read);
+        //Se solo uno dei due bit e impostato a 1, si setta a 0 se si mette in code la page
+        else if((mmu->tables[0].pages[listHead].flags & Valid) && (mmu->tables[0].pages[listHead].flags & Read) && !(mmu->tables[0].pages[listHead].flags & Write) && !(mmu->tables[0].pages[listHead].flags & Unswappable)){
+           mmu->tables[0].pages[listHead].flags &= ~Read; //setto read a 0
+            printf("Set read bit of page %d to %d\n\n",mmu->tables[0].pages[listHead].page_id, mmu->tables[0].pages[listHead].flags & Read);
             //Sposto l'elemento in coda
-            inTail(mmu, listHead);
+
         }
-        else if((listHead->element->flags & Valid) && !(listHead->element->flags & Read) && (listHead->element->flags & Write) && !(listHead->element->flags & Unswappable)){
-            listHead->element->flags &= ~Write; //setto read a 0
-            printf("Set written(dirty) bit of page %d to %d\n\n",listHead->element->page_id, listHead->element->flags & Write);
+        else if((mmu->tables[0].pages[listHead].flags & Valid) && !(mmu->tables[0].pages[listHead].flags & Read) && (mmu->tables[0].pages[listHead].flags & Write) && !(mmu->tables[0].pages[listHead].flags & Unswappable)){
+            mmu->tables[0].pages[listHead].flags &= ~Write; //setto read a 0
+            printf("Set written(dirty) bit of page %d to %d\n\n",mmu->tables[0].pages[listHead].page_id, mmu->tables[0].pages[listHead].flags & Write);
             //Sposto l'elemento in coda
-            inTail(mmu, listHead);
+
         }
-        else if((listHead->element->flags & Valid) && (listHead->element->flags & Read) && (listHead->element->flags & Write) && !(listHead->element->flags & Unswappable)){
+        else if((mmu->tables[0].pages[listHead].flags & Valid) && (mmu->tables[0].pages[listHead].flags & Read) && (mmu->tables[0].pages[listHead].flags & Write) && !(mmu->tables[0].pages[listHead].flags & Unswappable)){
             //Se sia il bit di read che di write sono a 1, la pagina è usata molto: si setta uno dei bit a 0 e ha un'altra second chance
-            listHead->element->flags &= ~Write; //setto read a 0
-            printf("Both read and write bits were 1: change write bit of page %d to %d\n\n",listHead->element->page_id, listHead->element->flags & Write);
+           mmu->tables[0].pages[listHead].flags &= ~Write; //setto read a 0
+            printf("Both read and write bits were 1: change write bit of page %d to %d\n\n",mmu->tables[0].pages[listHead].page_id, mmu->tables[0].pages[listHead].flags & Write);
             //Sposto l'elemento in coda
-            inTail(mmu, listHead);
+
         }
         //Pagina non sfrattata, si va avanti
-        listHead = listHead->next;
+        listHead++;
+        if(listHead >= 4096){
+            listHead = 0;
+        }
     }
 
 }
@@ -115,6 +119,10 @@ void MMU_writeByte(MMU* mmu, int pos, char c){
         mmu->memory->frames[frame_id].mem[offset] = c; 
         printf("Fatto\n\n");
     }else{
+        if(page_id < 4){
+            //non scriviamo nella pgtable
+            return;
+        }
         //Eccezione per accesso a memoria invalido
         MMU_exception(mmu,pos);
         //Riproviamo a scrivere dopo aver allocato/sostituito la pagina
@@ -127,7 +135,7 @@ void MMU_writeByte(MMU* mmu, int pos, char c){
 char* MMU_readByte(MMU* mmu, int pos ){
 
     if(pos >= (1<<24) || pos<0){
-        printf("Errore, posizione illegale! L'istruzione sarà ignorata.\n\n");
+        printf("Errore, posizione illegale! L'istruzione sara ignorata.\n\n");
         return NULL;
     }
     //Calcoliamo Id e offset del processo a cui accedere ~
@@ -141,6 +149,10 @@ char* MMU_readByte(MMU* mmu, int pos ){
         printf("Fatto\n\n");
         return &(mmu->memory->frames[frame_id].mem[offset]);
     }else{
+        if(page_id < 4){
+            //non leggiamo dalla pgtable
+            return NULL;
+        }
         //Se sto leggendo da memoria invalida cerco sul file il frame
         MMU_exception(mmu,pos);
         //e riprovo la lettura

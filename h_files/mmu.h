@@ -80,8 +80,8 @@ typedef struct MMU {
   PageTable * tables;  //nuova tabella allocata per ogni processo
   RAM * memory;
   FILE * swap_file;
-  PageElement * pages_list;
   char track_alloc_frames[NUM_PAGES];
+  uint32_t listHead;
 } MMU;
 
 
